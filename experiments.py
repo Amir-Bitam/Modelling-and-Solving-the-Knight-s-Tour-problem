@@ -1,12 +1,4 @@
-"""
-experiments.py : mesures pour le rapport (sans interface graphique).
-Responsable : MEMBRE 1
 
-Objectif : voir comment la taille de la population et le taux de mutation
-influencent le nombre de générations nécessaires pour trouver un tour complet.
-
-Usage :  python experiments.py
-"""
 
 import time
 
@@ -15,34 +7,62 @@ from population import Population
 
 
 def run_once(population_size, mutation_rate, tournament_size=3, max_generations=5000):
-    """
-    Lance UN run de l'algorithme génétique (même boucle que main.py, sans GUI).
 
-    Retourne (generations, temps_en_secondes, trouve)
-        trouve = True si fitness 64 atteinte avant max_generations, sinon False
-        (le max_generations évite une boucle infinie).
-    """
-    raise NotImplementedError
+    pop = Population(population_size,mutation_rate,tournament_size)
+    
+   
+
+    start_time = time.perf_counter()
+
+    while True:
+        pop.check_population()
+        max_fit, best = pop.evaluate()
+        if max_fit == MAX_FITNESS or pop.generation > max_generations:
+            break
+        pop.create_new_generation()
+
+    end_time = time.perf_counter()
+
+    seconds = end_time - start_time
+    
+    found = max_fit == MAX_FITNESS
+
+    return (pop.generation,seconds,max_fit,found)
 
 
-def average_over_runs(population_size, mutation_rate, nb_runs=20):
-    """
-    Lance nb_runs runs et retourne (moyenne des générations, moyenne du temps,
-    nombre de runs réussis). Ne compter dans les moyennes que les runs réussis.
-    """
-    raise NotImplementedError
+def average_over_runs(population_size, mutation_rate,tournament_size=3, nb_runs=20):
+    average_generation = 0
+    average_time = 0
+    successful_runs= 0
+    for i in range(nb_runs): 
+        generation,seconds,_,found = run_once(population_size,mutation_rate,tournament_size)
+
+        if found:
+            sucessful_runs = sucessful_runs + 1
+            average_generation = average_generation + generation
+            average_time = average_time + seconds  #on compte seulement les moyenne pour les run reussi
+    if successful_runs == 0:
+        return (None,None,0)
+    else:
+        return (average_generation/sucessful_runs,average_time/sucessful_runs,sucessful_runs)    
+     
+def print_row(label, result):
+    mean_gen, mean_time, successes = result
+    if mean_gen is None:
+        print(label, "-> successes:", successes, "/ 20, no tour found")
+    else:
+        print(label, "-> successes:", successes, "/ 20, generations:", round(mean_gen), ", seconds:", round(mean_time, 2))
 
 
 def main():
-    """
-    TODO : tester plusieurs valeurs, par exemple
-        population_size dans [20, 50, 100, 200]       (mutation_rate = 0.02)
-        mutation_rate   dans [0.005, 0.01, 0.02, 0.05, 0.1]   (population_size = 50)
-    et afficher un tableau :
-        taille | taux | générations moyennes | temps moyen | réussites / 20
-    Copier ce tableau dans le rapport et commenter (quelle combinaison est la meilleure ?).
-    """
-    raise NotImplementedError
+    print("Population size (mutation 0.02, tournament 3)")
+    for size in [10, 25, 50, 100, 200]:
+        print_row(size, average_over_runs(size, 0.02, 3))
+
+    print()
+    print("Mutation rate (population 50, tournament 3)")
+    for rate in [0.005, 0.01, 0.02, 0.05, 0.1]:
+        print_row(rate, average_over_runs(50, rate, 3))
 
 
 if __name__ == "__main__":

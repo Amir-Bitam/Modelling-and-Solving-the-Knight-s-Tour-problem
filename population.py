@@ -1,75 +1,84 @@
-"""
-population.py : la population de cavaliers et les opérateurs de sélection.
-Responsable : MEMBRE 1
-(Dépend de Knight du membre 2 : seulement via le contrat décrit dans le README.)
-"""
+
 
 import random
 
 from config import MUTATION_RATE, TOURNAMENT_SIZE
-from chromosome import Chromosome
 from knight import Knight
 
 
 class Population:
 
     def __init__(self, population_size, mutation_rate=MUTATION_RATE, tournament_size=TOURNAMENT_SIZE):
-        """
-        Attributs obligatoires (CONTRAT) :
-            self.population_size
-            self.generation = 1
-            self.knights    = liste de population_size Knight() aléatoires
-        Garder aussi self.mutation_rate et self.tournament_size
-        (valeurs par défaut de config.py, modifiables pour les expériences).
-        """
-        raise NotImplementedError
 
+        self.population_size = population_size
+        self.generation = 1
+        self.knights=[]
+        self.mutation_rate = mutation_rate
+        self.tournament_size = tournament_size
+
+        for _ in range(population_size):
+            self.knights.append(Knight())
+
+           
     def check_population(self):
-        """
-        Pour chaque cavalier de la population : appeler knight.check_moves().
-        """
-        raise NotImplementedError
+        for k in self.knights:
+            k.check_moves()
+
 
     def evaluate(self):
-        """
-        Pour chaque cavalier : appeler knight.evaluate_fitness().
-        Retourner le tuple (maxFit, bestKnight) : la meilleure fitness de la
-        génération et le cavalier correspondant.
-        CONTRAT : retourne (int, Knight).
-        """
-        raise NotImplementedError
+        best_score = 0 
+        best_knight = None
+        for k in self.knights:
+            current = k.evaluate_fitness()
 
-    def tournament_selection(self, size):
-        """
-        Sélection par tournoi.
+            if  best_score < current :
 
-        TODO :
-            1. tirer 'size' cavaliers DIFFERENTS au hasard : random.sample(self.knights, size)
-            2. les trier par fitness décroissante
-            3. retourner les deux meilleurs : (parent1, parent2)
+                best_score = current
+                best_knight = k
 
-        CONTRAT : retourne deux objets Knight (pas des chromosomes).
-        Les fitness doivent déjà être calculées (evaluate() appelée avant).
-        """
-        raise NotImplementedError
+        return (best_score,best_knight)
+
+    def tournament_selection(self, size = None):
+
+        if size is None:
+            size = self.tournament_size
+        
+
+        tournament = random.sample(self.knights,size)
+        tournament.sort(key=lambda k: k.fitness,reverse=True)
+
+        
+        first_parent = tournament[0]
+        second_parent = tournament[1]
+
+        return(first_parent,second_parent)
+
 
     def create_new_generation(self):
-        """
-        Remplace self.knights par la génération suivante (même taille).
 
-        TODO :
-            nouveaux = []
-            tant que len(nouveaux) < self.population_size :
-                parent1, parent2 = self.tournament_selection(self.tournament_size)
-                enfant1, enfant2 = parent1.chromosome.crossover(parent2.chromosome)
-                enfant1.mutation(self.mutation_rate)
-                enfant2.mutation(self.mutation_rate)
-                ajouter Knight(enfant1) et Knight(enfant2) à 'nouveaux'
-            si la taille dépasse population_size (taille impaire) : couper la fin
-            self.knights = nouveaux
-            self.generation += 1
+        new_knights = []
 
-        Attention : créer de NOUVEAUX Knight pour les enfants (ne pas réutiliser
-        les anciens objets, sinon leur path / fitness resteraient ceux du parent).
-        """
-        raise NotImplementedError
+        while len(new_knights) < self.population_size:
+
+            parent1,parent2 = self.tournament_selection()
+            child1,child2 = parent1.chromosome.crossover(parent2.chromosome)
+
+            child1.mutation(self.mutation_rate)
+            child2.mutation(self.mutation_rate)
+
+            knight1 = Knight(child1)
+            knight2 = Knight(child2)
+
+            new_knights.append(knight1)
+            new_knights.append(knight2)
+
+     
+        self.knights = new_knights[:self.population_size]
+        self.generation+=1
+
+
+
+
+
+            
+

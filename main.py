@@ -1,10 +1,3 @@
-"""
-main.py : lance l'algorithme génétique puis affiche la solution.
-Responsable : MEMBRE 3
-
-Usage :  python main.py
-"""
-
 import time
 
 from config import POPULATION_SIZE, MAX_FITNESS

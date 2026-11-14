@@ -1,10 +1,3 @@
-"""
-config.py : constantes partagées par TOUS les fichiers (le "contrat").
-A valider ensemble à la réunion de départ, puis personne ne modifie
-sans prévenir les autres. (Seuls les paramètres de la section 3 peuvent
-être ajustés pour les expériences.)
-"""
-
 # ----------------------------------------------------------------------
 # 1) L'échiquier
 # ----------------------------------------------------------------------

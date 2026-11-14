@@ -38,13 +38,13 @@ def average_over_runs(population_size, mutation_rate,tournament_size=3, nb_runs=
         generation,seconds,_,found = run_once(population_size,mutation_rate,tournament_size)
 
         if found:
-            sucessful_runs = sucessful_runs + 1
+            successful_runs = successful_runs + 1
             average_generation = average_generation + generation
             average_time = average_time + seconds  #on compte seulement les moyenne pour les run reussi
     if successful_runs == 0:
         return (None,None,0)
     else:
-        return (average_generation/sucessful_runs,average_time/sucessful_runs,sucessful_runs)    
+        return (average_generation/successful_runs,average_time/successful_runs,successful_runs)    
      
 def print_row(label, result):
     mean_gen, mean_time, successes = result

@@ -1,8 +1,3 @@
-"""
-chromosome.py : le chromosome d'un cavalier = la liste de ses 63 déplacements.
-Responsable : MEMBRE 1
-"""
-
 import random
 import copy
 from config import NB_GENES, MUTATION_RATE

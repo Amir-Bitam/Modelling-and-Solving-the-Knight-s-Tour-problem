@@ -11,7 +11,7 @@ python main.py
 | Membre | Fichiers | Contenu |
 |---|---|---|
 | 1 | `chromosome.py`, `population.py`, `experiments.py` | Chromosome (init, crossover, mutation), Population (init, check_population, evaluate, tournament_selection, create_new_generation), expériences pour le rapport |
-| 2 | `knight.py`, `test_knight.py` | Knight (init, move_forward, move_backward, check_moves, evaluate_fitness) + tests |
+| 2 | `knight.py` | Knight (init, move_forward, move_backward, check_moves, evaluate_fitness) |
 | 3 | `gui.py`, `main.py` (+ `ART/knight.png`) | Interface Pygame (Figure 2 du PDF) et fonction main |
 
 `config.py` est partagé : constantes communes, personne ne le modifie sans prévenir (seuls les paramètres de la section 3 servent aux expériences).
@@ -30,12 +30,5 @@ python main.py
 ## Valeurs de contrôle
 
 - Direction 8 en (0, 0) : corrigée en **3** (cycle avant) ou en **4** (cycle arrière).
-- `KNOWN_TOUR_GENES` (dans `test_knight.py`) doit donner fitness **64** sans aucune correction.
 - Avec population 50, 3 chromosomes de tournoi et mutation 0.02 par gène, un run complet doit trouver un tour en quelques dizaines à quelques centaines de générations, en moins de 2 secondes (prototype de référence : 19 à 76 générations sur 3 essais).
   Si votre run dépasse plusieurs milliers de générations, cherchez un bug (gènes non réécrits après correction, `path` non remis à zéro, listes partagées entre chromosomes).
-
-## Assemblage
-
-1. Chacun code et teste sa partie (Membre 3 peut tester la GUI avec `KNOWN_TOUR_GENES`).
-2. Membre 3 assemble : `python main.py`.
-3. Membre 1 lance `experiments.py`, les 3 rédigent le rapport.

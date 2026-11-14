@@ -1,20 +1,3 @@
-"""
-gui.py : interface Pygame qui affiche la solution (comme la Figure 2 de l'énoncé).
-Responsable : MEMBRE 3
-
-Ce que l'on doit voir (Figure 2 du PDF) :
-    - un échiquier 8 x 8 avec cases claires / foncées alternées (vert et crème)
-    - les numéros de colonnes (1 à 8) en haut et en bas, les numéros de lignes
-      (1 à 8) à gauche et à droite
-    - le cavalier qui se déplace case par case le long de la solution
-    - chaque case déjà visitée est colorée (plus claire) et affiche son numéro
-      d'ordre de passage (1, 2, 3 ... 64)
-    - à côté (ou en bas) : numéro de génération, fitness, temps de calcul
-
-Pour tester sans attendre l'algorithme génétique : utiliser un tour complet
-connu (voir KNOWN_TOUR_GENES dans test_knight.py) ou construire un path à la main.
-"""
-
 import os
 import time
 
@@ -22,9 +5,14 @@ import pygame
 
 from config import BOARD_SIZE
 
-WIDTH = 800
+WIDTH = 1050
 HEIGHT = 800
 ART_DIR = os.path.join(os.path.dirname(__file__), "ART")   # mettre knight.png ici
+BOARD_IMAGE_PATH = os.path.join(ART_DIR, "board.jpg")
+BOARD_IMAGE = None
+BOARD_IMAGE_SIZE = None
+BOARD_RATIO = 0.797
+BOARD_OFFSET = 0.102
 
 # Couleurs suggérées (à ajuster selon la Figure 2)
 LIGHT_SQUARE = (238, 238, 210)
@@ -35,47 +23,103 @@ TEXT = (60, 70, 50)
 
 
 def load_knight_image(tile):
-    """
-    Charge ART/knight.png redimensionnée à (tile, tile).
-    Si l'image n'existe pas : retourner None, et draw_board dessinera à la place
-    un cercle noir avec la lettre "N" (solution de secours).
-    """
-    raise NotImplementedError
+    image_path = os.path.join(ART_DIR, "knight.png")
+    if not os.path.exists(image_path):
+        return None
+
+    image = pygame.image.load(image_path).convert_alpha()
+    return pygame.transform.smoothscale(image, (tile, tile))
 
 
 def draw_board(screen, path, step, tile, ox, oy, font, knight_img):
-    """
-    Dessine l'échiquier tel qu'il est après 'step' déplacements.
+    global BOARD_IMAGE, BOARD_IMAGE_SIZE
 
-    path : liste des positions (x, y) du cavalier (path[0] = (0, 0)).
-    step : indice dans path ; le cavalier est en path[step].
-    tile : taille d'une case en pixels ; (ox, oy) : coin haut-gauche de l'échiquier.
-    font : police pour les numéros.
+    board_image_size = int(tile * BOARD_SIZE / BOARD_RATIO)
 
-    TODO :
-        1. pour chaque case (x, y) : couleur claire/foncée selon (x + y) % 2
-        2. pour chaque indice k de 0 à step : colorer path[k] en "visitée" et
-           écrire le numéro k + 1 au centre de la case
-        3. dessiner le cavalier en path[step]
-        4. écrire les numéros de colonnes (haut et bas) et de lignes (gauche et droite)
-    Attention : y = ligne (0 en haut), x = colonne (voir config.py).
-    """
-    raise NotImplementedError
+    if BOARD_IMAGE is None or BOARD_IMAGE_SIZE != board_image_size:
+        image = pygame.image.load(BOARD_IMAGE_PATH).convert()
+        BOARD_IMAGE = pygame.transform.smoothscale(
+            image, (board_image_size, board_image_size)
+        )
+        BOARD_IMAGE_SIZE = board_image_size
+
+    screen.blit(BOARD_IMAGE, (ox, oy))
+
+    board_left = ox + int(board_image_size * BOARD_OFFSET)
+    board_top = oy + int(board_image_size * BOARD_OFFSET)
+    current_step = min(step, len(path) - 1)
+    visited_overlay = pygame.Surface((tile, tile), pygame.SRCALPHA)
+    visited_overlay.fill((80, 190, 80, 110))
+
+    for index in range(current_step + 1):
+        x, y = path[index]
+        cell = pygame.Rect(board_left + x * tile, board_top + y * tile,
+                           tile, tile)
+        screen.blit(visited_overlay, cell.topleft)
+        number = font.render(str(index + 1), True, TEXT)
+        number_rect = number.get_rect(center=cell.center)
+        screen.blit(number, number_rect)
+
+    if knight_img is not None:
+        x, y = path[current_step]
+        cell = pygame.Rect(board_left + x * tile, board_top + y * tile,
+                           tile, tile)
+        knight_rect = knight_img.get_rect(center=cell.center)
+        screen.blit(knight_img, knight_rect)
 
 
 def show_solution(path, generation=0, fitness=0, elapsed=0.0, delay_ms=300):
-    """
-    Ouvre la fenêtre et anime la solution (bloquant jusqu'à fermeture de la fenêtre).
+    if not path:
+        raise ValueError("path cannot be empty")
 
-    path : best_knight.path (64 positions pour un tour complet).
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("Knight's Tour")
 
-    TODO :
-        - pygame.init(), créer la fenêtre (WIDTH x HEIGHT), titre "Knight's Tour"
-        - boucle : gérer pygame.QUIT (et la touche Echap) ; toutes les delay_ms
-          millisecondes, passer à l'étape suivante jusqu'à la dernière position
-        - afficher generation / fitness / temps (texte)
-        - à la fin : le dernier état reste affiché
-        - bonus : touche ou bouton "Rejouer" qui recommence l'animation
-        - pygame.quit() à la fermeture
-    """
-    raise NotImplementedError
+    tile = 70
+    board_x = 20
+    board_y = 20
+    font = pygame.font.SysFont(None, 24)
+    info_font = pygame.font.SysFont(None, 30)
+    knight_img = load_knight_image(tile)
+    clock = pygame.time.Clock()
+
+    step = 0
+    next_step_time = pygame.time.get_ticks() + delay_ms
+    running = True
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                elif event.key == pygame.K_r:
+                    step = 0
+                    next_step_time = pygame.time.get_ticks() + delay_ms
+
+        now = pygame.time.get_ticks()
+        if step < len(path) - 1 and now >= next_step_time:
+            step += 1
+            next_step_time = now + delay_ms
+
+        screen.fill((45, 35, 30))
+        draw_board(screen, path, step, tile, board_x, board_y, font, knight_img)
+
+        info_x = 770
+        screen.blit(info_font.render("Knight's Tour", True, (255, 255, 255)),
+                    (info_x, 100))
+        screen.blit(info_font.render("Generation: " + str(generation),
+                                     True, (255, 255, 255)), (info_x, 160))
+        screen.blit(info_font.render("Fitness: " + str(fitness),
+                                     True, (255, 255, 255)), (info_x, 205))
+        screen.blit(info_font.render("Time: " + str(round(elapsed, 2)) + " s",
+                                     True, (255, 255, 255)), (info_x, 250))
+        screen.blit(font.render("R: replay    ESC: quit", True, (255, 255, 255)),
+                    (info_x, 320))
+
+        pygame.display.flip()
+        clock.tick(60)
+
+    pygame.quit()

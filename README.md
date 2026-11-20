@@ -1,34 +1,93 @@
-# Projet 2 : Problème du cavalier avec algorithme génétique
+# Knight's Tour Solver
 
-## Lancer
-```
+This project models and solves the Knight's Tour problem with a genetic
+algorithm.
+
+The goal is to find a sequence of 63 legal knight moves that visits every
+square of an 8×8 chessboard exactly once. The search starts from the
+top-left corner, `(0, 0)`. Once a complete tour is found, the solution is
+displayed as an animated Pygame board.
+
+## Features
+
+- Generates an initial population of candidate tours.
+- Evaluates candidates using the number of unique squares visited.
+- Uses tournament selection, one-point crossover, and per-gene mutation.
+- Repairs invalid moves by trying the neighboring directions in a cyclic order.
+- Animates the best solution on an 8×8 board.
+- Provides experiments for comparing population sizes and mutation rates.
+
+## Requirements
+
+- Python 3
+- `pygame-ce`
+
+Install the dependency with:
+
+```bash
 python -m pip install -r requirements.txt
+```
+
+## Running the solver
+
+From this directory, run:
+
+```bash
 python main.py
 ```
 
-## Répartition
+The program searches until it finds a complete tour, then opens the
+visualization window. In the visualization:
 
-| Membre | Fichiers | Contenu |
-|---|---|---|
-| 1 | `chromosome.py`, `population.py`, `experiments.py` | Chromosome (init, crossover, mutation), Population (init, check_population, evaluate, tournament_selection, create_new_generation), expériences pour le rapport |
-| 2 | `knight.py` | Knight (init, move_forward, move_backward, check_moves, evaluate_fitness) |
-| 3 | `gui.py`, `main.py` (+ `ART/knight.png`) | Interface Pygame (Figure 2 du PDF) et fonction main |
+- Press `R` to replay the tour.
+- Press `Esc` or close the window to exit.
 
-`config.py` est partagé : constantes communes, personne ne le modifie sans prévenir (seuls les paramètres de la section 3 servent aux expériences).
+## Running experiments
 
-## Contrat entre les classes
+To run the predefined experiments for population size and mutation rate:
 
-- Gène : entier de **1 à 8** (clé de `MOVES`). Chromosome : liste `genes` de 63 gènes.
-- Position : `(x, y)`, x = colonne, y = ligne (0 en haut). Départ `(0, 0)`.
-- `Chromosome(genes=None)` ; `crossover(partner)` -> **tuple de 2 Chromosome** ; `mutation(rate)` modifie en place.
-- `Knight(chromosome=None)` : attributs `position`, `chromosome`, `path` (départ inclus), `fitness`.
-- `Knight.check_moves(cycle=None)` corrige `chromosome.genes` **en place**, reconstruit `path` depuis zéro.
-- `Knight.evaluate_fitness()` met à jour et retourne `fitness` (64 = tour complet, la case de départ compte).
-- `Population(size)` : `knights`, `generation` (commence à 1). `evaluate()` -> `(maxFit, bestKnight)`. `tournament_selection(size)` -> **2 Knight**.
-- `show_solution(path, generation, fitness, elapsed)` dans `gui.py`.
+```bash
+python experiments.py
+```
 
-## Valeurs de contrôle
+The experiment script performs multiple runs and reports the average number
+of generations, average runtime, and number of successful runs.
 
-- Direction 8 en (0, 0) : corrigée en **3** (cycle avant) ou en **4** (cycle arrière).
-- Avec population 50, 3 chromosomes de tournoi et mutation 0.02 par gène, un run complet doit trouver un tour en quelques dizaines à quelques centaines de générations, en moins de 2 secondes (prototype de référence : 19 à 76 générations sur 3 essais).
-  Si votre run dépasse plusieurs milliers de générations, cherchez un bug (gènes non réécrits après correction, `path` non remis à zéro, listes partagées entre chromosomes).
+## Algorithm overview
+
+Each candidate solution is represented by a chromosome containing 63 genes.
+Each gene is an integer from `1` to `8`, representing one of the eight
+possible knight-move directions.
+
+For every generation, the solver:
+
+1. Builds a valid path from each chromosome.
+2. Calculates its fitness, where `64` means that all board squares were
+   visited.
+3. Selects parents using tournament selection.
+4. Creates children with one-point crossover.
+5. Mutates each child according to the configured mutation rate.
+6. Repeats until a complete tour is found.
+
+The default parameters are defined in [`config.py`](config.py):
+
+| Parameter | Default |
+|---|---:|
+| Board size | 8 × 8 |
+| Population size | 50 |
+| Tournament size | 3 |
+| Mutation rate | 0.02 per gene |
+| Maximum fitness | 64 |
+
+## Project structure
+
+| File | Description |
+|---|---|
+| [`main.py`](main.py) | Runs the solver and displays the solution. |
+| [`config.py`](config.py) | Stores board dimensions and algorithm parameters. |
+| [`chromosome.py`](chromosome.py) | Defines genes, crossover, and mutation. |
+| [`knight.py`](knight.py) | Builds paths and calculates candidate fitness. |
+| [`population.py`](population.py) | Manages evaluation and new generations. |
+| [`experiments.py`](experiments.py) | Runs parameter-comparison experiments. |
+| [`gui.py`](gui.py) | Provides the Pygame visualization. |
+| [`ART/`](ART/) | Contains the board and knight image assets. |

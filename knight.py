@@ -1,6 +1,7 @@
 import random
 from chromosome import Chromosome
 
+
 DX = [0, 1, 2, 2, 1, -1, -2, -2, -1]
 DY = [0, -2, -1, 1, 2, 2, 1, -1, -2]
 
@@ -70,6 +71,7 @@ class Knight:
         if attempt < 7: #if we still have attempts left, move back and try agin
           self.move_backward(direction)
 
+      # if we have exhausted all attempts and still have not found a valid move, we break the loop and stop processing the chromosome
       if not valid_move:
         break
 
